@@ -26,14 +26,14 @@ export class DataService {
                 this.getData(Query.queries[key]).subscribe(res => {
                     if (!!res) {
                         this.data[key] = res;
-                        return resolve(res.length);
+                        return resolve();
                     }
                 });
             });
             promises.push(promise);
         });
         const promiseResult = Promise.all(promises).then(res => {
-            if (!!res) {
+            if (res) {
                 return this.data;
             }
         });
