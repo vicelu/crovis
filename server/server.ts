@@ -4,6 +4,7 @@ const port = 3000;
 const cors = require('cors');
 const http = require('http');
 const request = require('request');
+const zupanijeGeoJson = require('./zupanije_GeoJson_optimized.json');
 const basePath = 'https://www.koronavirus.hr/json/';
 const query = {
     podaci: '?action=podaci',
@@ -33,6 +34,16 @@ Object.keys(query).forEach(key => {
             res.send(e);
         }
     });
+});
+
+app.get(`/zupanije-geo-json`, (req, res) => {
+    const timestamp = Date();
+    try {
+        res.send(zupanijeGeoJson);
+        console.log(`Successfully retrieved GET/zupanije-geo-json at ${timestamp}`);
+    } catch (e) {
+        console.error(e);
+    }
 });
 
 app.listen(port, () => {

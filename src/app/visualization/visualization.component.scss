@@ -1,0 +1,14 @@
+#container {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+}
+
+#container > * {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.mapboxgl-ctrl-group { border-radius: 44px; }
+.mapboxgl-ctrl { animation: fadein 2s ease-in-out 2s both; }

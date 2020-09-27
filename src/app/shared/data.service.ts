@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { from, Observable } from 'rxjs';
 import { Query } from './models/query';
+import { Data } from './models/data';
 
 @Injectable()
 export class DataService {
 
-    public data = {} as Observable<any>;
+    public data = {} as Data;
 
     protected basePath = 'http://localhost:3000';
     public defaultHeaders = new HttpHeaders();
@@ -19,19 +20,32 @@ export class DataService {
         return this.httpClient.get<any>(`${this.basePath}/${action}`, {headers});
     }
 
+    public getZupanijeGeoJson(): Observable<any> {
+        return this.getData('zupanije-geo-json');
+    }
+
     public getAllData(): Observable<any> {
         const promises = [];
-        Object.keys(Query.queries).forEach(key => {
-            const promise: Promise<any> = new Promise(resolve => {
-                this.getData(Query.queries[key]).subscribe(res => {
-                    if (!!res) {
-                        this.data[key] = res;
-                        return resolve();
-                    }
-                });
+        // Object.keys(Query.queries).forEach(key => {
+        //     const promise: Promise<any> = new Promise(resolve => {
+        //         this.getData(Query.queries[key]).subscribe(res => {
+        //             if (!!res) {
+        //                 this.data[key] = res;
+        //                 return resolve();
+        //             }
+        //         });
+        //     });
+        //     promises.push(promise);
+        // });
+        const geoJsonPromise: Promise<any> = new Promise(resolve => {
+            this.getZupanijeGeoJson().subscribe(res => {
+                if (!!res) {
+                    this.data.zupanije_geo_json = res;
+                    return resolve();
+                }
             });
-            promises.push(promise);
         });
+        promises.push(geoJsonPromise);
         const promiseResult = Promise.all(promises).then(res => {
             if (res) {
                 return this.data;

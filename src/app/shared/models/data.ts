@@ -8,9 +8,14 @@ export interface Data {
     po_danima_zupanijama: Array<PoDanimaZupanijama>;
     po_danima_zupanijama_zadnji: Array<PoDanimaZupanijama>;
     po_osobama: Array<PoOsobama>;
+    zupanije_geo_json: any;
 }
 
 export class ZupanijaLatLng {
     constructor(zupanije: Array<Zupanija>) {
+        // zupanije.forEach(zupanija => {
+        //     this[zupanija] = Zupanija[zupanija];
+        // });
+        // console.log(this);
     }
 }
