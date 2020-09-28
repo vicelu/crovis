@@ -26,17 +26,17 @@ export class DataService {
 
     public getAllData(): Observable<any> {
         const promises = [];
-        // Object.keys(Query.queries).forEach(key => {
-        //     const promise: Promise<any> = new Promise(resolve => {
-        //         this.getData(Query.queries[key]).subscribe(res => {
-        //             if (!!res) {
-        //                 this.data[key] = res;
-        //                 return resolve();
-        //             }
-        //         });
-        //     });
-        //     promises.push(promise);
-        // });
+        Object.keys(Query.queries).forEach(key => {
+            const promise: Promise<any> = new Promise(resolve => {
+                this.getData(Query.queries[key]).subscribe(res => {
+                    if (!!res) {
+                        this.data[key] = res;
+                        return resolve();
+                    }
+                });
+            });
+            promises.push(promise);
+        });
         const geoJsonPromise: Promise<any> = new Promise(resolve => {
             this.getZupanijeGeoJson().subscribe(res => {
                 if (!!res) {

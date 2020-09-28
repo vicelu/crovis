@@ -1,12 +1,11 @@
-import { AfterViewInit, Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component } from '@angular/core';
 import { DataService } from '../shared/data.service';
 import { Deck, FlyToInterpolator } from '@deck.gl/core';
-import { ScatterplotLayer } from '@deck.gl/layers';
 import { GeoJsonLayer } from '@deck.gl/layers';
 import { DataModel } from '../shared/data.model';
-import { Spol } from '../shared/models/po-osobama';
 import mapboxgl from 'mapbox-gl';
 import { environment } from '../../environments/environment';
+
 mapboxgl.accessToken = environment.mapbox.accessToken;
 
 @Component({
@@ -16,19 +15,28 @@ mapboxgl.accessToken = environment.mapbox.accessToken;
 })
 export class VisualizationComponent implements AfterViewInit {
 
-  private deck = undefined;
-  private map = undefined;
-  private INITIAL_VIEW_STATE = {
-    latitude: 44.830871,  // Oštra Luka BiH, centar Hrvatske
-    longitude:	16.693624,
-    zoom: 6
-  };
-  private M = [0, 0, 255];
-  private Ž = [255, 0, 0];
-
   constructor(
       public dataService: DataService
   ) {}
+
+  private deck = undefined;
+  private map = undefined;
+  private INITIAL_VIEW_STATE = {
+    latitude: 44.604127,  // Drnić, Bosanski petrovac, BiH, centar Hrvatske
+    longitude:	16.246978,
+    zoom: 6.2
+  };
+  private M = [0, 0, 255];
+  private Ž = [255, 0, 0];
+  private MAX_CASES = 0;
+  private MIN_CASES = Infinity;
+
+  private static generateColorFromActiveCases(high, low, activeCases) {
+    const range = high - low;
+    const r = 255 * (activeCases / range);
+    const b = 255 * (1 - (activeCases / range));
+    return [r, 0, b];
+  }
 
   ngAfterViewInit(): void {
     // DeckGL canvas
@@ -52,7 +60,7 @@ export class VisualizationComponent implements AfterViewInit {
       style: 'mapbox://styles/pericakeksic/ckflml7nj0e4k19nt2b2oxsiy',
       center: [this.INITIAL_VIEW_STATE.longitude, this.INITIAL_VIEW_STATE.latitude],
       zoom: this.INITIAL_VIEW_STATE.zoom,
-      interactive: false,
+      interactive: true,
     });
 
     this.map.once('data', () => {
@@ -61,7 +69,21 @@ export class VisualizationComponent implements AfterViewInit {
 
     this.dataService.getAllData().subscribe(res => {
         DataModel.fillModel(res);
-        console.log(DataModel.data);
+        DataModel.data.po_danima_zupanijama_zadnji[0].PodaciDetaljno.forEach(zupanija => {
+          if (zupanija.broj_aktivni > this.MAX_CASES) {
+            this.MAX_CASES = zupanija.broj_aktivni;
+          } else if (zupanija.broj_aktivni < this.MIN_CASES) {
+            this.MIN_CASES = zupanija.broj_aktivni;
+          }
+        });
+        DataModel.data.zupanije_geo_json.features.forEach(feature => {
+          const zadnjiPodaciZupanija = DataModel.data.po_danima_zupanijama_zadnji[0].PodaciDetaljno
+              .find(podaci => podaci.Zupanija === feature.properties.name);
+          if (!!zadnjiPodaciZupanija) {
+            feature.properties[`color`] = VisualizationComponent.generateColorFromActiveCases(
+                this.MAX_CASES, this.MIN_CASES, zadnjiPodaciZupanija.broj_aktivni);
+          }
+      });
         setTimeout(this.renderLayers.bind(this), 1500);
       });
   }
@@ -87,12 +109,8 @@ export class VisualizationComponent implements AfterViewInit {
       data: DataModel.data.zupanije_geo_json,
       pickable: true,
       filled: true,
-      opacity: 0.05,
-      lineWidthScale: 20,
-      lineWidthMinPixels: 2,
-      getFillColor: [200, 200, 200],
-      getLineWidth: 1,
-      getElevation: 30,
+      opacity: 0.8,
+      getFillColor: d => d.properties.color,
       autoHighlight: true
     });
     layers.push(zupanijeGeoJsonLayer);
@@ -105,7 +123,7 @@ export class VisualizationComponent implements AfterViewInit {
             longitude: this.INITIAL_VIEW_STATE.longitude,
             latitude: this.INITIAL_VIEW_STATE.latitude,
             zoom: this.INITIAL_VIEW_STATE.zoom + 0.5,
-            pitch: 10,
+            pitch: 15,
             transitionDuration: 1500,
             transitionInterpolator: new FlyToInterpolator()
           }});
